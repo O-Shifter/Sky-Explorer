@@ -1,53 +1,315 @@
-<DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="Estilo.css">
-        <title>Gremio 29 de Julho</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Infinity Void: Solid Planets</title>
+    <style>
+        :root { --ui: #00d9ff; --bg: #000108; --rank: #ffcc00; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Consolas', monospace; overflow: hidden; touch-action: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        #hud { position: absolute; top: 15px; left: 15px; background: rgba(0,10,20,0.9); padding: 12px; border-left: 3px solid var(--ui); font-size: 11px; z-index: 10; pointer-events: none; min-width: 200px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
+        .val { color: var(--ui); }
+        .label { color: #888; font-size: 9px; margin-right: 5px; }
+        .rank-box { border: 1px solid var(--rank); color: var(--rank); padding: 2px 8px; font-weight: bold; font-size: 10px; margin-bottom: 10px; display: inline-block; letter-spacing: 1px; }
+        
+        #radar-box { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.9); border: 2px solid #444; border-radius: 50%; padding: 5px; z-index: 10; }
+        #radar { width: 100px; height: 100px; border-radius: 50%; display: block; }
 
-    <body>
-        <header>
-            <div class="faixa-superior">
-                    <img src="Logo-Escola8.png" class="L-Escola">
-                    <img src="Logo-Escola4-m-3.png" class="L-Escola2">
-                    <h1 class="N-Gremio">Gremio Geração Conciente</h1>
-                    <h3 class="N-Escola">Escola Estadual Civico Militar 29 de Julho</h4>
+        #menu-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 1000; background: rgba(0,0,0,0.8); pointer-events: all; }
+        #menu-toggle { position: absolute; bottom: 120px; left: 20px; width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--ui); background: #000; color: var(--ui); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; z-index: 1001; }
+        
+        #config-menu { background: #050a15; border: 2px solid var(--ui); padding: 20px; display: flex; flex-direction: column; gap: 10px; border-radius: 10px; width: 320px; max-height: 85vh; overflow-y: auto; }
+        .menu-sec { border-top: 1px solid #222; padding: 10px 0; font-size: 11px; }
+        
+        #paint-shop { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+        .color-dot { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .locked { background: #1a1a1a !important; border-color: #333 !important; color: #444; cursor: not-allowed; }
+        
+        .controls { position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: center; gap: 12px; pointer-events: none; z-index: 20; }
+        .btn { width: 65px; height: 65px; border-radius: 50%; border: 1px solid rgba(0,217,255,0.3); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); pointer-events: all; font-size: 9px; }
+        .btn span { font-size: 16px; color: var(--ui); font-weight: bold; }
+        .btn.active { background: var(--ui); color: #000; }
+        
+        .btn-reset { padding: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; color: #fff; width: 100%; }
+        .seed-input { background: #000; border: 1px solid #333; color: var(--ui); padding: 8px; width: 100%; box-sizing: border-box; margin-top: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <div id="hud">
+        <div id="h-rank" class="rank-box">RECRUTA</div><br>
+        <span class="label">COORD:</span> <span id="h-pos" class="val">0, 0</span><br>
+        <span class="label">ANOMALIA:</span> <span id="h-anom" class="val">---</span><br>
+        <span class="label">OBJ_DATA:</span> <span id="h-local-data" class="val">0.0 / 0.0</span> <span class="val">TB</span><br>
+        <span class="label">ACCOUNT:</span> <span id="h-total" class="val">0</span> <span class="val">TB</span><br>
+        <span class="label">S_CODE:</span> <span id="h-seed" class="val">777</span>
+    </div>
+
+    <div id="radar-box"><canvas id="radar"></canvas></div>
+
+    <div id="menu-toggle" onclick="toggleMenu()">!</div>
+    <div id="menu-wrapper" onclick="if(event.target === this) toggleMenu()">
+        <div id="config-menu">
+            <b style="color:var(--ui); font-size: 16px;">SISTEMAS DE BORDO</b>
+            <div class="menu-sec">
+                CORES DO CASCO (15 TB por nível):<br>
+                <div id="paint-shop"></div>
             </div>
-        </header>
-
-        <main>
-            <img src="Logo-gremio2.png" class="L-Gremio">
-
-            <div class="Menu-principal">
-                <a href="pagina-dois.html">
-                    <div class="gambiarra-1">
-                        <div class="Menu-interno">
-                            <p>Noticias</p>
-                        </div>
-                    </div>    
-                </a>
-
-                <a href="pagina-tres.html">
-                    <div class="gambiarra-1">
-                        <div class="Menu-interno">
-                            <p>Mande ideias</p>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="pagina-contatos.html">
-                    <div class="gambiarra-1">
-                        <div class="Menu-interno">
-                            <p>Contatos</p>
-                        </div>
-                    </div>
-                </a>
+            <div class="menu-sec">
+                DENSIDADE: <input type="range" id="dense-input" min="0.1" max="0.9" step="0.1" value="0.5" style="width:100%">
+                SET SEED:
+                <input type="text" id="seed-input" class="seed-input" placeholder="777">
+                <button onclick="applySeed(false)" class="btn-reset" style="background: var(--ui); color:#000">RE-GERAR</button>
+                <button onclick="applySeed(true)" class="btn-reset" style="background: #f04;">RESET TOTAL (WIPE)</button>
             </div>
-        </main>
-        <footer>
-            <p id="paragrafo-footer">&copy; 2025 Gremio 29 de Julho. Todos os direitos reservados.</p>
-        </footer>
-    </body>
+            <div id="enc-list" class="menu-sec"><b>ENCICLOPÉDIA:</b><br></div>
+            <button onclick="toggleMenu()" style="background:#222; color:#fff; border:none; padding:10px; cursor:pointer; border-radius:5px;">VOLTAR</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div id="btn-l" class="btn"><span>A</span>ROT L</div>
+        <div id="btn-s" class="btn"><span>S</span>SHIFT</div>
+        <div id="btn-f" class="btn"><span>W</span>BURN</div>
+        <div id="btn-r" class="btn"><span>D</span>ROT R</div>
+    </div>
+
+    <canvas id="game"></canvas>
+
+<script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const rCanvas = document.getElementById('radar');
+    const rCtx = rCanvas.getContext('2d');
+
+    const input = { l: false, r: false, f: false, s: false };
+    const s = { x: 0, y: 0, vx: 0, vy: 0, ang: 0, score: 0, seed: 777, density: 0.5, shipColor: '#00d9ff', burnCol: '#ffaa00', shiftCol: '#00ffff' };
+    let entities = [], chunks = new Set(), stars = [];
+
+    const ranks = [
+        { min: 0, t: "RECRUTA" }, { min: 100, t: "EXPLORADOR" }, { min: 300, t: "PILOTO_VOID" },
+        { min: 750, t: "CARTÓGRAFO" }, { min: 1500, t: "COMANDANTE" }, { min: 3000, t: "VETERANO" },
+        { min: 6000, t: "ELITE_GALAXY" }, { min: 12000, t: "MESTRE_VOID" },
+        { min: 25000, t: "ANOMALIA_VIVA" }, { min: 60000, t: "LENDA_ETERNA" }
+    ];
+
+    const colorPalette = [
+        '#00d9ff','#ff4400','#00ff88','#f0f','#fff','#ffff00','#ff0055','#0055ff','#88ff00','#ffaa00','#aa00ff','#00ffaa',
+        '#550000','#003300','#000055','#333333','#664422','#440044','#ff9999','#99ff99','#9999ff','#ffff99','#ff99ff','#99ffff',
+        '#b8860b','#c0c0c0','#e5e4e2','#cd7f32','#4b0082','#808000','#00ced1','#ff1493','#adff2f','#fa8072','#4682b4','#ffd700'
+    ];
+
+    const effects = [
+        { d: "Gravidade: Puxa para o centro.", f: (dx, dy) => { s.vx += dx/50000; s.vy += dy/50000; } },
+        { d: "Calor: Casco incandescente.", f: () => { s.temp = true; } },
+        { d: "Estática: SHIFT offline.", f: () => { s.noS = true; } },
+        { d: "Vácuo: Atrito zero.", f: () => { s.fric = 0.999; } },
+        { d: "Magnetismo: Leme invertido.", f: () => { s.inv = true; } },
+        { d: "Névoa: Visão borrada.", f: () => { s.blur = true; } },
+        { d: "Pressão: Motor fraco.", f: () => { s.pwr = 0.05; } },
+        { d: "Repulsão: Empuxo reverso.", f: (dx, dy) => { s.vx -= dx/30000; s.vy -= dy/30000; } },
+        { d: "Radiação: Distorção visual.", f: () => { s.hue = true; } },
+        { d: "Carga: Motor potente.", f: () => { s.pwr = 0.4; } }
+    ];
+
+    let encyclopedia = JSON.parse(localStorage.getItem('iv_enc_final_v8') || "{}");
+    s.score = parseFloat(localStorage.getItem('iv_score') || "0");
+    s.seed = parseInt(localStorage.getItem('iv_seed')) || 777;
+
+    function getRank(score) {
+        let current = ranks[0].t;
+        ranks.forEach(r => { if(score >= r.min) current = r.t; });
+        return current;
+    }
+
+    function getContrast(hex, shift) {
+        let r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+        return shift ? `rgb(${255-r}, ${b}, ${255-g})` : `rgb(${b}, ${255-r}, ${g})`;
+    }
+
+    function resize() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        rCanvas.width = 100; rCanvas.height = 100;
+        stars = Array.from({length: 180}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, z: Math.random()*3+1, c: ['#fff','#ff0','#f44'][Math.floor(Math.random()*3)] }));
+    }
+    window.addEventListener('resize', resize); resize();
+
+    const setupBtn = (id, key) => {
+        const el = document.getElementById(id);
+        const start = (e) => { e.preventDefault(); input[key] = true; el.classList.add('active'); };
+        const end = (e) => { e.preventDefault(); input[key] = false; el.classList.remove('active'); };
+        el.addEventListener('touchstart', start); el.addEventListener('touchend', end);
+        el.addEventListener('mousedown', start); window.addEventListener('mouseup', end);
+    };
+    setupBtn('btn-l', 'l'); setupBtn('btn-r', 'r'); setupBtn('btn-f', 'f'); setupBtn('btn-s', 's');
+
+    window.onkeydown = (e) => { let k = e.key.toLowerCase(); if(k==='w') input.f=true; if(k==='a') input.l=true; if(k==='d') input.r=true; if(k==='s') input.s=true; };
+    window.onkeyup = (e) => { let k = e.key.toLowerCase(); if(k==='w') input.f=false; if(k==='a') input.l=false; if(k==='d') input.r=false; if(k==='s') input.s=false; };
+
+    function toggleMenu() {
+        const wrapper = document.getElementById('menu-wrapper');
+        wrapper.style.display = wrapper.style.display === 'flex' ? 'none' : 'flex';
+        if(wrapper.style.display === 'flex') document.getElementById('seed-input').value = s.seed;
+        updateUI();
+    }
+
+    function updateUI() {
+        const list = document.getElementById('enc-list');
+        list.innerHTML = "<b>ENCICLOPÉDIA:</b><br>";
+        Object.entries(encyclopedia).forEach(([name, desc]) => {
+            list.innerHTML += `<div style="font-size:9px; margin-bottom:4px; border-bottom:1px solid #111;"><b>${name}:</b> ${desc}</div>`;
+        });
+
+        const shop = document.getElementById('paint-shop');
+        shop.innerHTML = "";
+        colorPalette.forEach((col, i) => {
+            let req = i * 15;
+            let unlocked = s.score >= req;
+            let dot = document.createElement('div');
+            dot.className = `color-dot ${unlocked ? '' : 'locked'}`;
+            dot.style.background = unlocked ? col : '#111';
+            dot.innerHTML = unlocked ? '' : '🔒';
+            if(unlocked) dot.onclick = () => { s.shipColor = col; s.burnCol = getContrast(col, false); s.shiftCol = getContrast(col, true); };
+            shop.appendChild(dot);
+        });
+    }
+
+    function hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+        return Math.abs(hash);
+    }
+
+    function applySeed(hard) {
+        if(hard) { localStorage.clear(); encyclopedia = {}; s.score = 0; s.x=s.y=s.vx=s.vy=0; s.seed = 777; }
+        else {
+            const val = document.getElementById('seed-input').value;
+            s.seed = val === "" ? Math.floor(Math.random() * 9999) : (isNaN(val) ? hashString(val) : parseInt(val));
+        }
+        localStorage.setItem('iv_seed', s.seed);
+        s.density = 1 - parseFloat(document.getElementById('dense-input').value);
+        entities = []; chunks = new Set();
+        toggleMenu();
+    }
+
+    function spawn(cx, cy) {
+        let key = `${cx},${cy}`;
+        if (chunks.has(key)) return;
+        chunks.add(key);
+        let seed = s.seed + (cx * 13) + (cy * 17);
+        for(let i=0; i<4; i++) {
+            let r = (n) => { let x = Math.sin(seed + n) * 10000; return x - Math.floor(x); };
+            if (r(i) > s.density) {
+                let max = Math.floor(40 + r(i+8)*160); 
+                entities.push({
+                    n: ["ATOM","VOID","STAR","CORE","NOVA"][Math.floor(r(i+1)*5)] + "-" + Math.floor(r(i+2)*99),
+                    mod: effects[Math.floor(r(i+3)*10)],
+                    col: `hsl(${r(i+4)*360}, 70%, 50%)`,
+                    x: cx*2500 + r(i+5)*2500, y: cy*2500 + r(i+6)*2500,
+                    sz: 50 + r(i+7)*120, dl: max, maxDl: max 
+                });
+            }
+        }
+    }
+
+    function loop() {
+        ctx.fillStyle = '#000108'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        
+        stars.forEach(st => {
+            let sx = (st.x - s.x/st.z) % canvas.width; if(sx < 0) sx += canvas.width;
+            let sy = (st.y - s.y/st.z) % canvas.height; if(sy < 0) sy += canvas.height;
+            ctx.fillStyle = st.c; ctx.fillRect(sx, sy, st.z/2, st.z/2);
+        });
+
+        let cx = Math.floor(s.x/2500), cy = Math.floor(s.y/2500);
+        for(let i=-2; i<=2; i++) for(let j=-2; j<=2; j++) spawn(cx+i, cy+j);
+
+        rCtx.fillStyle = "#000"; rCtx.fillRect(0,0,100,100);
+        rCtx.fillStyle = s.shipColor; rCtx.fillRect(49,49,2,2);
+
+        let scan = "---", currentDl = 0, totalDl = 0, shipCol = s.shipColor;
+        s.pwr = 0.15; s.fric = 0.985; s.inv = s.temp = s.noS = s.blur = s.hue = false;
+
+        ctx.save();
+        ctx.translate(canvas.width/2, canvas.height/2);
+
+        entities.forEach(e => {
+            let dx = e.x - s.x, dy = e.y - s.y, dist = Math.hypot(dx, dy);
+            if(dist < 5000) {
+                rCtx.fillStyle = (e.dl > 0.1) ? e.col : "#333";
+                let rx = 50 + dx/80, ry = 50 + dy/80;
+                if(rx>0 && rx<100 && ry>0 && ry<100) rCtx.fillRect(rx, ry, 2, 2);
+
+                if(dist < 3000) {
+                    ctx.save(); ctx.translate(dx, dy);
+                    // Brilho externo (aura)
+                    ctx.beginPath(); ctx.arc(0,0,e.sz*1.4,0,7); 
+                    ctx.fillStyle = e.col; ctx.globalAlpha = 0.2; ctx.fill();
+                    
+                    // Planeta Sólido (Mantém a cor sempre)
+                    ctx.beginPath(); ctx.arc(0,0,e.sz,0,7); 
+                    ctx.fillStyle = e.col; ctx.globalAlpha = 1.0; ctx.fill();
+                    
+                    // Detalhe de luz para profundidade
+                    ctx.beginPath(); ctx.arc(-e.sz/3, -e.sz/3, e.sz/4, 0, 7);
+                    ctx.fillStyle = "#fff"; ctx.globalAlpha = 0.3; ctx.fill();
+
+                    // Área de Extração (círculo pontilhado)
+                    ctx.beginPath(); ctx.arc(0,0,e.sz*4,0,7); 
+                    ctx.strokeStyle = e.col; ctx.globalAlpha = 0.1; ctx.stroke();
+                    ctx.restore();
+                    
+                    if(dist < e.sz * 4) {
+                        scan = e.n;
+                        currentDl = e.maxDl - e.dl;
+                        totalDl = e.maxDl;
+                        if(e.dl > 0) { 
+                            let drain = 0.05;
+                            e.dl -= drain; s.score += drain; 
+                        }
+                        if(!encyclopedia[e.n]) { encyclopedia[e.n] = e.mod.d; localStorage.setItem('iv_enc_final_v8', JSON.stringify(encyclopedia)); }
+                        e.mod.f(dx, dy);
+                    }
+                }
+            }
+        });
+
+        if(s.temp) shipCol = "#ff4400";
+        if(s.blur) ctx.filter = "blur(2px)";
+        if(s.hue) ctx.filter = "hue-rotate(90deg)";
+
+        ctx.save(); ctx.rotate(s.ang);
+        let shiftActive = input.s && !s.noS;
+        if(input.f || shiftActive) {
+            ctx.fillStyle = shiftActive ? s.shiftCol : s.burnCol;
+            ctx.beginPath(); ctx.moveTo(-6,12); ctx.lineTo(0, (shiftActive?50:25) + Math.random()*15); ctx.lineTo(6,12); ctx.fill();
+        }
+        ctx.fillStyle = shipCol;
+        if(shiftActive) ctx.scale(1, 1.4);
+        ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(14,14); ctx.lineTo(-14,14); ctx.fill();
+        ctx.restore(); ctx.restore();
+
+        if(input.l) s.ang -= s.inv ? -0.05 : 0.05;
+        if(input.r) s.ang += s.inv ? -0.05 : 0.05;
+        let p = (input.s && !s.noS) ? s.pwr * 4 : s.pwr;
+        if(input.f || (input.s && !s.noS)) { s.vx += Math.sin(s.ang)*p; s.vy -= Math.cos(s.ang)*p; }
+        s.x += s.vx; s.y += s.vy; s.vx *= s.fric; s.vy *= s.fric;
+
+        document.getElementById('h-pos').innerText = `${Math.floor(s.x/100)}, ${Math.floor(s.y/100)}`;
+        document.getElementById('h-total').innerText = Math.floor(s.score);
+        document.getElementById('h-anom').innerText = scan;
+        document.getElementById('h-local-data').innerText = `${currentDl.toFixed(1)} / ${totalDl.toFixed(1)}`;
+        document.getElementById('h-rank').innerText = getRank(s.score);
+        document.getElementById('h-seed').innerText = s.seed;
+        
+        localStorage.setItem('iv_score', s.score);
+        ctx.filter = "none";
+        requestAnimationFrame(loop);
+    }
+    updateUI();
+    loop();
+</script>
+</body>
 </html>
